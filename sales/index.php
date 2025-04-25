@@ -5,15 +5,15 @@ if ($mysqli->connect_error) {
     die("DB接続失敗: " . $mysqli->connect_error);
 }
 
-// 年月の取得（GETパラメータ or 今日）
+// 年月（数値で安全に取得）
 $year = isset($_GET['year']) ? (int)$_GET['year'] : (int)date('Y');
 $month = isset($_GET['month']) ? (int)$_GET['month'] : (int)date('m');
 
-// 開始日と終了日を作成
+// 正しい日付フォーマットを作成
 $start = sprintf('%04d-%02d-01', $year, $month);
 $end = date('Y-m-t', strtotime($start));
 
-// 売上データ取得
+// データ取得
 $stmt = $mysqli->prepare("
     SELECT id, sales_at, amount, receipt_no, created_at, updated_at
     FROM sales
@@ -24,7 +24,7 @@ $stmt->bind_param("ss", $start, $end);
 $stmt->execute();
 $result = $stmt->get_result();
 
-// データを配列に格納＆総売上を計算
+// 集計処理
 $total = 0;
 $rows = [];
 while ($row = $result->fetch_assoc()) {
