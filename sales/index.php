@@ -1,15 +1,20 @@
 <?php
-$mysqli = new mysqli("localhost", "root", "", "yse_register");
+$mysqli = new mysqli("localhost", "root", "", "yse_regi");
 if ($mysqli->connect_error) {
     die("DB接続失敗: " . $mysqli->connect_error);
 }
 
 $year = $_GET['year'] ?? date('Y');
 $month = $_GET['month'] ?? date('m');
-$start = "{$year}-{$month}-01";
+$start = "$year-$month-01";
 $end = date("Y-m-t", strtotime($start));
 
-$stmt = $mysqli->prepare("SELECT id, amount, created_at FROM sales WHERE created_at BETWEEN ? AND ?");
+$stmt = $mysqli->prepare("
+    SELECT id, sales_at, amount, receipt_no, created_at, updated_at
+    FROM sales
+    WHERE sales_at BETWEEN ? AND ?
+    ORDER BY sales_at DESC
+");
 $stmt->bind_param("ss", $start, $end);
 $stmt->execute();
 $result = $stmt->get_result();
@@ -32,64 +37,51 @@ $stmt->close();
         body {
             font-family: 'Helvetica Neue', sans-serif;
             background-color: #f4f6f9;
-            padding: 50px 20px;
+            padding: 40px;
             color: #333;
         }
         h1 {
             font-size: 28px;
             margin-bottom: 20px;
         }
-        .filter-form {
-            margin-bottom: 30px;
+        form {
+            margin-bottom: 20px;
             text-align: center;
         }
         select, button {
-            padding: 10px 15px;
+            padding: 8px 12px;
             font-size: 16px;
-            margin: 0 5px;
-            border-radius: 6px;
-            border: 1px solid #ccc;
-        }
-        button {
-            background-color: #2d98da;
-            color: white;
-            border: none;
-        }
-        button:hover {
-            background-color: #2274b5;
+            margin: 0 4px;
         }
         table {
-            width: 90%;
+            width: 95%;
             max-width: 1000px;
             margin: 0 auto;
             border-collapse: collapse;
             background: white;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+            box-shadow: 0 3px 8px rgba(0,0,0,0.08);
         }
         th, td {
-            padding: 14px 20px;
+            padding: 12px 16px;
             border-bottom: 1px solid #eee;
             text-align: center;
         }
         th {
-            background-color: #f8f8f8;
-            font-weight: bold;
+            background-color: #f8f9fa;
         }
         .summary {
             text-align: center;
             font-size: 20px;
             color: #27ae60;
-            margin: 30px 0 20px;
+            margin: 20px 0;
         }
         .link-button {
             display: inline-block;
-            margin-top: 40px;
             background: #34495e;
             color: white;
+            padding: 10px 20px;
             text-decoration: none;
-            padding: 12px 24px;
-            border-radius: 8px;
-            font-size: 16px;
+            border-radius: 6px;
         }
         .link-button:hover {
             background: #2c3e50;
@@ -100,7 +92,7 @@ $stmt->close();
 
     <h1>📊 <?= $year ?>年 <?= $month ?>月の売上一覧</h1>
 
-    <form class="filter-form" method="get">
+    <form method="get">
         <select name="year">
             <?php for ($y = 2023; $y <= date('Y'); $y++): ?>
                 <option value="<?= $y ?>" <?= $y == $year ? 'selected' : '' ?>><?= $y ?>年</option>
@@ -118,22 +110,29 @@ $stmt->close();
 
     <table>
         <tr>
-            <th>請求書番号</th>
+            <th>ID</th>
+            <th>領収書番号</th>
             <th>売上日時</th>
             <th>金額</th>
+            <th>作成日</th>
+            <th>修正日</th>
         </tr>
         <?php foreach ($rows as $row): ?>
             <tr>
-                <td>#<?= $row['id'] ?></td>
-                <td><?= $row['created_at'] ?></td>
+                <td><?= $row['id'] ?></td>
+                <td><?= htmlspecialchars($row['receipt_no']) ?></td>
+                <td><?= $row['sales_at'] ?></td>
                 <td><?= number_format($row['amount']) ?> 円</td>
+                <td><?= $row['created_at'] ?></td>
+                <td><?= $row['updated_at'] ?></td>
             </tr>
         <?php endforeach; ?>
     </table>
 
-    <div style="text-align:center;">
+    <div style="text-align:center; margin-top:30px;">
         <a href="../index.php" class="link-button">⬅ レジに戻る</a>
     </div>
 
 </body>
 </html>
+
