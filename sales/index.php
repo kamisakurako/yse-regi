@@ -1,14 +1,19 @@
 <?php
+// データベース接続
 $mysqli = new mysqli("localhost", "root", "", "yse_regi");
 if ($mysqli->connect_error) {
     die("DB接続失敗: " . $mysqli->connect_error);
 }
 
-$year = $_GET['year'] ?? date('Y');
-$month = $_GET['month'] ?? date('m');
-$start = "$year-$month-01";
-$end = date("Y-m-t", strtotime($start));
+// 年月の取得（GETパラメータ or 今日）
+$year = isset($_GET['year']) ? (int)$_GET['year'] : (int)date('Y');
+$month = isset($_GET['month']) ? (int)$_GET['month'] : (int)date('m');
 
+// 開始日と終了日を作成
+$start = sprintf('%04d-%02d-01', $year, $month);
+$end = date('Y-m-t', strtotime($start));
+
+// 売上データ取得
 $stmt = $mysqli->prepare("
     SELECT id, sales_at, amount, receipt_no, created_at, updated_at
     FROM sales
@@ -19,6 +24,7 @@ $stmt->bind_param("ss", $start, $end);
 $stmt->execute();
 $result = $stmt->get_result();
 
+// データを配列に格納＆総売上を計算
 $total = 0;
 $rows = [];
 while ($row = $result->fetch_assoc()) {
@@ -52,6 +58,17 @@ $stmt->close();
             padding: 8px 12px;
             font-size: 16px;
             margin: 0 4px;
+            border-radius: 6px;
+            border: 1px solid #ccc;
+        }
+        button {
+            background-color: #3498db;
+            color: white;
+            border: none;
+            transition: background 0.3s;
+        }
+        button:hover {
+            background-color: #2980b9;
         }
         table {
             width: 95%;
@@ -68,6 +85,7 @@ $stmt->close();
         }
         th {
             background-color: #f8f9fa;
+            font-weight: bold;
         }
         .summary {
             text-align: center;
@@ -77,37 +95,43 @@ $stmt->close();
         }
         .link-button {
             display: inline-block;
+            margin-top: 30px;
             background: #34495e;
             color: white;
             padding: 10px 20px;
             text-decoration: none;
             border-radius: 6px;
+            font-size: 16px;
         }
         .link-button:hover {
             background: #2c3e50;
         }
     </style>
 </head>
+
 <body>
 
-    <h1>📊 <?= $year ?>年 <?= $month ?>月の売上一覧</h1>
+    <h1>📊 <?= htmlspecialchars($year) ?>年 <?= htmlspecialchars($month) ?>月の売上一覧</h1>
 
+    <!-- 年月検索フォーム -->
     <form method="get">
         <select name="year">
             <?php for ($y = 2023; $y <= date('Y'); $y++): ?>
-                <option value="<?= $y ?>" <?= $y == $year ? 'selected' : '' ?>><?= $y ?>年</option>
+                <option value="<?= $y ?>" <?= ($y === $year) ? 'selected' : '' ?>><?= $y ?>年</option>
             <?php endfor; ?>
         </select>
         <select name="month">
             <?php for ($m = 1; $m <= 12; $m++): ?>
-                <option value="<?= str_pad($m, 2, '0', STR_PAD_LEFT) ?>" <?= $m == $month ? 'selected' : '' ?>><?= $m ?>月</option>
+                <option value="<?= str_pad($m, 2, '0', STR_PAD_LEFT) ?>" <?= ($m == $month) ? 'selected' : '' ?>><?= $m ?>月</option>
             <?php endfor; ?>
         </select>
         <button type="submit">検索</button>
     </form>
 
+    <!-- 総売上表示 -->
     <div class="summary">💰 総売上：<?= number_format($total) ?> 円</div>
 
+    <!-- 売上一覧テーブル -->
     <table>
         <tr>
             <th>ID</th>
@@ -119,20 +143,20 @@ $stmt->close();
         </tr>
         <?php foreach ($rows as $row): ?>
             <tr>
-                <td><?= $row['id'] ?></td>
+                <td><?= htmlspecialchars($row['id']) ?></td>
                 <td><?= htmlspecialchars($row['receipt_no']) ?></td>
-                <td><?= $row['sales_at'] ?></td>
+                <td><?= htmlspecialchars($row['sales_at']) ?></td>
                 <td><?= number_format($row['amount']) ?> 円</td>
-                <td><?= $row['created_at'] ?></td>
-                <td><?= $row['updated_at'] ?></td>
+                <td><?= htmlspecialchars($row['created_at']) ?></td>
+                <td><?= htmlspecialchars($row['updated_at']) ?></td>
             </tr>
         <?php endforeach; ?>
     </table>
 
-    <div style="text-align:center; margin-top:30px;">
+    <!-- 戻るボタン -->
+    <div style="text-align:center;">
         <a href="../index.php" class="link-button">⬅ レジに戻る</a>
     </div>
 
 </body>
 </html>
-
