@@ -1,19 +1,18 @@
 <?php
-// データベース接続
 $mysqli = new mysqli("localhost", "root", "", "yse_regi");
 if ($mysqli->connect_error) {
     die("DB接続失敗: " . $mysqli->connect_error);
 }
 
-// 年月（数値で安全に取得）
+// 年月取得（安全に数値化）
 $year = isset($_GET['year']) ? (int)$_GET['year'] : (int)date('Y');
 $month = isset($_GET['month']) ? (int)$_GET['month'] : (int)date('m');
 
-// 正しい日付フォーマットを作成
+// 期間指定
 $start = sprintf('%04d-%02d-01', $year, $month);
 $end = date('Y-m-t', strtotime($start));
 
-// データ取得
+// 売上データ取得
 $stmt = $mysqli->prepare("
     SELECT id, sales_at, amount, receipt_no, created_at, updated_at
     FROM sales
@@ -24,7 +23,7 @@ $stmt->bind_param("ss", $start, $end);
 $stmt->execute();
 $result = $stmt->get_result();
 
-// 集計処理
+// データ整理
 $total = 0;
 $rows = [];
 while ($row = $result->fetch_assoc()) {
@@ -49,15 +48,16 @@ $stmt->close();
         h1 {
             font-size: 28px;
             margin-bottom: 20px;
+            text-align: center;
         }
         form {
-            margin-bottom: 20px;
+            margin-bottom: 30px;
             text-align: center;
         }
         select, button {
-            padding: 8px 12px;
+            padding: 8px 14px;
             font-size: 16px;
-            margin: 0 4px;
+            margin: 0 5px;
             border-radius: 6px;
             border: 1px solid #ccc;
         }
@@ -65,7 +65,6 @@ $stmt->close();
             background-color: #3498db;
             color: white;
             border: none;
-            transition: background 0.3s;
         }
         button:hover {
             background-color: #2980b9;
@@ -76,7 +75,7 @@ $stmt->close();
             margin: 0 auto;
             border-collapse: collapse;
             background: white;
-            box-shadow: 0 3px 8px rgba(0,0,0,0.08);
+            box-shadow: 0 4px 10px rgba(0,0,0,0.08);
         }
         th, td {
             padding: 12px 16px;
@@ -85,7 +84,6 @@ $stmt->close();
         }
         th {
             background-color: #f8f9fa;
-            font-weight: bold;
         }
         .summary {
             text-align: center;
@@ -95,25 +93,22 @@ $stmt->close();
         }
         .link-button {
             display: inline-block;
-            margin-top: 30px;
             background: #34495e;
             color: white;
             padding: 10px 20px;
             text-decoration: none;
             border-radius: 6px;
-            font-size: 16px;
+            margin-top: 30px;
         }
         .link-button:hover {
             background: #2c3e50;
         }
     </style>
 </head>
-
 <body>
 
     <h1>📊 <?= htmlspecialchars($year) ?>年 <?= htmlspecialchars($month) ?>月の売上一覧</h1>
 
-    <!-- 年月検索フォーム -->
     <form method="get">
         <select name="year">
             <?php for ($y = 2023; $y <= date('Y'); $y++): ?>
@@ -128,10 +123,8 @@ $stmt->close();
         <button type="submit">検索</button>
     </form>
 
-    <!-- 総売上表示 -->
     <div class="summary">💰 総売上：<?= number_format($total) ?> 円</div>
 
-    <!-- 売上一覧テーブル -->
     <table>
         <tr>
             <th>ID</th>
@@ -153,7 +146,6 @@ $stmt->close();
         <?php endforeach; ?>
     </table>
 
-    <!-- 戻るボタン -->
     <div style="text-align:center;">
         <a href="../index.php" class="link-button">⬅ レジに戻る</a>
     </div>
