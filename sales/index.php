@@ -30,60 +30,77 @@ $stmt->close();
     <title>売上一覧</title>
     <style>
         body {
-            font-family: 'Segoe UI', sans-serif;
-            background: #f9f9f9;
-            text-align: center;
-            padding: 50px;
+            font-family: 'Helvetica Neue', sans-serif;
+            background-color: #f4f6f9;
+            padding: 50px 20px;
+            color: #333;
         }
         h1 {
             font-size: 28px;
-            color: #333;
+            margin-bottom: 20px;
         }
-        h2 {
-            color: #4CAF50;
-            margin-top: 30px;
-        }
-        form {
-            margin: 20px 0;
+        .filter-form {
+            margin-bottom: 30px;
+            text-align: center;
         }
         select, button {
-            padding: 6px 12px;
+            padding: 10px 15px;
             font-size: 16px;
             margin: 0 5px;
+            border-radius: 6px;
+            border: 1px solid #ccc;
+        }
+        button {
+            background-color: #2d98da;
+            color: white;
+            border: none;
+        }
+        button:hover {
+            background-color: #2274b5;
         }
         table {
-            width: 80%;
-            margin: 20px auto;
+            width: 90%;
+            max-width: 1000px;
+            margin: 0 auto;
             border-collapse: collapse;
-            background: #fff;
-            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+            background: white;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
         }
         th, td {
-            border: 1px solid #ddd;
-            padding: 10px 15px;
+            padding: 14px 20px;
+            border-bottom: 1px solid #eee;
+            text-align: center;
         }
         th {
-            background-color: #f0f0f0;
+            background-color: #f8f8f8;
+            font-weight: bold;
+        }
+        .summary {
+            text-align: center;
+            font-size: 20px;
+            color: #27ae60;
+            margin: 30px 0 20px;
         }
         .link-button {
             display: inline-block;
-            background: #ff9800;
+            margin-top: 40px;
+            background: #34495e;
             color: white;
-            padding: 10px 20px;
             text-decoration: none;
+            padding: 12px 24px;
             border-radius: 8px;
-            margin-top: 20px;
+            font-size: 16px;
         }
         .link-button:hover {
-            background: #fb8c00;
+            background: #2c3e50;
         }
     </style>
 </head>
 <body>
 
-    <h1>📅 <?= $year ?>年 <?= $month ?>月 の売上一覧</h1>
+    <h1>📊 <?= $year ?>年 <?= $month ?>月の売上一覧</h1>
 
-    <form method="get">
+    <form class="filter-form" method="get">
         <select name="year">
             <?php for ($y = 2023; $y <= date('Y'); $y++): ?>
                 <option value="<?= $y ?>" <?= $y == $year ? 'selected' : '' ?>><?= $y ?>年</option>
@@ -95,10 +112,9 @@ $stmt->close();
             <?php endfor; ?>
         </select>
         <button type="submit">検索</button>
-        <a href="index.php">クリア</a>
     </form>
 
-    <h2>💰 総売上：<?= number_format($total) ?> 円</h2>
+    <div class="summary">💰 総売上：<?= number_format($total) ?> 円</div>
 
     <table>
         <tr>
@@ -115,7 +131,9 @@ $stmt->close();
         <?php endforeach; ?>
     </table>
 
-    <a href="../index.php" class="link-button">⬅ レジに戻る</a>
+    <div style="text-align:center;">
+        <a href="../index.php" class="link-button">⬅ レジに戻る</a>
+    </div>
 
 </body>
 </html>
